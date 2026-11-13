@@ -3,7 +3,7 @@
 [![CI](https://github.com/vintendohuynh/GarbageClassificationModel/actions/workflows/ci.yml/badge.svg)](https://github.com/vintendohuynh/GarbageClassificationModel/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.16%2B-FF6F00.svg?logo=tensorflow&logoColor=white)](https://www.tensorflow.org/)
-[![Tests](https://img.shields.io/badge/Tests-16%20passed-success.svg)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-20%20passed-success.svg)](tests/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-GarbageMLModel__CS549-blue)](https://huggingface.co/vincenthuynh/GarbageMLModel_CS549)
 
@@ -18,14 +18,16 @@ Trained on the [Kaggle Garbage Classification dataset](https://www.kaggle.com/da
 ## 📁 Modular Python Architecture
 
 ```
+├── assets/             # Demo images and Grad-CAM visual heatmaps
 ├── src/
 │   ├── __init__.py      # Package exports and version
 │   ├── model.py        # Modern Keras CNN architecture, save/load (.keras & .h5)
 │   ├── dataset.py      # Kaggle download, 80/20 train/val split, ImageDataGenerators
 │   ├── train.py        # CLI trainer with configurable hyperparameters
 │   ├── predict.py      # Inference pipeline & CLI for single images or directories
+│   ├── explain.py      # Grad-CAM heatmap generation and visual overlay
 │   └── utils.py        # Evaluation curves, confusion matrix, and reporting
-├── tests/              # Comprehensive pytest test suite (16 tests)
+├── tests/              # Comprehensive pytest test suite (20 tests)
 ├── requirements.txt    # Project dependencies
 └── GarbageMLModel_CS549_cleaned.ipynb  # Original Colab notebook
 ```
@@ -92,7 +94,21 @@ python -m src.predict --dir ./test_images --json
 
 ---
 
-### 4. Python API Usage
+### 4. Model Explainability via Grad-CAM (CLI)
+
+Visualize which regions of an image the CNN focused on to produce its prediction:
+
+```bash
+python -m src.explain --image assets/sample_paper.jpg --output assets/gradcam_demo.png
+```
+
+This generates a 3-panel comparison figure (`Original Image` | `Grad-CAM Activation` | `Superimposed Overlay`):
+
+![Grad-CAM Explainability Demo](assets/gradcam_demo.png)
+
+---
+
+### 5. Python API Usage
 
 ```python
 from src.predict import GarbagePredictor
@@ -107,6 +123,15 @@ predictor = GarbagePredictor(
 predictions = predictor.predict("example.jpg", top_k=3)
 for p in predictions:
     print(f"{p['class']}: {p['confidence'] * 100:.2f}%")
+
+# Generate Grad-CAM attention heatmap
+from src.explain import explain_image
+
+heatmap, overlay, class_name, confidence = explain_image(
+    image_path="assets/sample_paper.jpg",
+    model_path="GarbageMLModel_CS549.keras",
+)
+overlay.save("attention_overlay.png")
 ```
 
 ---
