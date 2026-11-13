@@ -1,5 +1,12 @@
 # 🗑️ Garbage Classification Model
 
+[![CI](https://github.com/vintendohuynh/GarbageClassificationModel/actions/workflows/ci.yml/badge.svg)](https://github.com/vintendohuynh/GarbageClassificationModel/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
+[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.16%2B-FF6F00.svg?logo=tensorflow&logoColor=white)](https://www.tensorflow.org/)
+[![Tests](https://img.shields.io/badge/Tests-16%20passed-success.svg)](tests/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-GarbageMLModel__CS549-blue)](https://huggingface.co/vincenthuynh/GarbageMLModel_CS549)
+
 A Convolutional Neural Network (CNN) built with modern TensorFlow / Keras 3 to classify waste into 6 categories: **cardboard**, **glass**, **metal**, **paper**, **plastic**, and **trash**.
 
 Trained on the [Kaggle Garbage Classification dataset](https://www.kaggle.com/datasets/asdasdasasdas/garbage-classification) (~2,500 images) with data augmentation, achieving ~92% validation accuracy.
