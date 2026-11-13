@@ -62,14 +62,30 @@ CATEGORY_INFO: Dict[str, Dict[str, str]] = {
 
 
 @st.cache_resource(show_spinner="Loading Convolutional Neural Network...")
-def get_model(model_path: str):
-    """Loads a saved Keras model or builds a baseline initialized model if missing."""
-    if os.path.isfile(model_path):
-        try:
-            return load_model(model_path, compile_model=False)
-        except Exception as e:
-            st.sidebar.warning(f"Failed to load {model_path} ({e}). Building initialized baseline.")
-    return build_model(input_shape=(150, 150, 3), num_classes=6, compile_model=False)
+def get_model(model_path: str = "GarbageMLModel_CS549.keras"):
+    """Loads a saved Keras model, downloads from Hugging Face if missing, or falls back to initialized baseline."""
+    # 1. Check local model candidates
+    candidates = [model_path, "GarbageMLModel_CS549.keras", "GarbageMLModel_CS549.h5", "model.h5"]
+    for cand in candidates:
+        if cand and os.path.isfile(cand):
+            try:
+                model = load_model(cand, compile_model=False)
+                return model, f"Local Checkpoint ({os.path.basename(cand)})"
+            except Exception:
+                continue
+
+    # 2. Automatically download trained weights from Hugging Face repository
+    try:
+        from huggingface_hub import hf_hub_download
+
+        hf_repo = "vincenthuynh/GarbageMLModel_CS549"
+        downloaded_path = hf_hub_download(repo_id=hf_repo, filename="model.h5")
+        model = load_model(downloaded_path, compile_model=False)
+        return model, f"Hugging Face Hub ({hf_repo})"
+    except Exception as e:
+        # 3. Fallback to fresh baseline if offline
+        fallback_model = build_model(input_shape=(150, 150, 3), num_classes=6, compile_model=False)
+        return fallback_model, f"Untrained Baseline (Error: {e})"
 
 
 def preprocess_image(img: Image.Image, target_size: Tuple[int, int] = (150, 150)) -> np.ndarray:
@@ -137,9 +153,24 @@ def main():
     classes_path = st.sidebar.text_input("Classes Mapping", value="classes.json")
     classes = load_classes(classes_path) if os.path.isfile(classes_path) else list(DEFAULT_CLASSES)
 
+    model, model_source = get_model(model_path)
+
+    if "Untrained" in model_source:
+        st.sidebar.warning(f"⚠️ {model_source}")
+    else:
+        st.sidebar.success(f"✅ {model_source}")
+
     st.sidebar.markdown("---")
     st.sidebar.subheader("🔍 Grad-CAM Controls")
-    target_layer = st.sidebar.selectbox("Convolutional Layer", options=["conv3", "conv2", "conv1"], index=0)
+
+    # Detect conv layers dynamically from the loaded model
+    conv_layers = [l.name for l in model.layers if "conv" in l.__class__.__name__.lower()]
+    default_layer_idx = len(conv_layers) - 1 if conv_layers else 0
+    target_layer = st.sidebar.selectbox(
+        "Convolutional Layer",
+        options=conv_layers if conv_layers else ["conv3"],
+        index=default_layer_idx,
+    )
     alpha = st.sidebar.slider("Heatmap Opacity (α)", min_value=0.1, max_value=0.9, value=0.4, step=0.05)
     colormap = st.sidebar.selectbox("Heatmap Colormap", options=["jet", "turbo", "viridis", "plasma", "magma"], index=0)
 
@@ -151,8 +182,6 @@ def main():
         - [Hugging Face Model](https://huggingface.co/vincenthuynh/GarbageMLModel_CS549)
         """
     )
-
-    model = get_model(model_path)
 
     # Input Method Selection
     input_tab1, input_tab2 = st.tabs(["📂 Select Sample Image", "⬆️ Upload Your Own Image"])

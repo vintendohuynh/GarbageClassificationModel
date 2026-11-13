@@ -59,6 +59,7 @@ def test_run_prediction():
 
 def test_get_model_fallback():
     """Verify get_model returns a valid model even when model file does not exist."""
-    model = get_model("nonexistent_model.keras")
+    model, source = get_model("nonexistent_model.keras")
     assert isinstance(model, tf.keras.Model)
     assert model.output_shape == (None, 6)
+    assert isinstance(source, str)
