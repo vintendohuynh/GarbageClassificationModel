@@ -3,7 +3,8 @@
 [![CI](https://github.com/vintendohuynh/GarbageClassificationModel/actions/workflows/ci.yml/badge.svg)](https://github.com/vintendohuynh/GarbageClassificationModel/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.16%2B-FF6F00.svg?logo=tensorflow&logoColor=white)](https://www.tensorflow.org/)
-[![Tests](https://img.shields.io/badge/Tests-20%20passed-success.svg)](tests/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.30%2B-FF4B4B.svg?logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![Tests](https://img.shields.io/badge/Tests-24%20passed-success.svg)](tests/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-GarbageMLModel__CS549-blue)](https://huggingface.co/vincenthuynh/GarbageMLModel_CS549)
 
@@ -18,7 +19,10 @@ Trained on the [Kaggle Garbage Classification dataset](https://www.kaggle.com/da
 ## 📁 Modular Python Architecture
 
 ```
-├── assets/             # Demo images and Grad-CAM visual heatmaps
+├── app.py              # Interactive Streamlit Web Application & UI
+├── assets/
+│   ├── gradcam_demo.png # 3-panel Grad-CAM visual report
+│   └── samples/        # Pre-packaged waste test images (6 categories)
 ├── src/
 │   ├── __init__.py      # Package exports and version
 │   ├── model.py        # Modern Keras CNN architecture, save/load (.keras & .h5)
@@ -27,7 +31,7 @@ Trained on the [Kaggle Garbage Classification dataset](https://www.kaggle.com/da
 │   ├── predict.py      # Inference pipeline & CLI for single images or directories
 │   ├── explain.py      # Grad-CAM heatmap generation and visual overlay
 │   └── utils.py        # Evaluation curves, confusion matrix, and reporting
-├── tests/              # Comprehensive pytest test suite (20 tests)
+├── tests/              # Comprehensive pytest test suite (24 tests)
 ├── requirements.txt    # Project dependencies
 └── GarbageMLModel_CS549_cleaned.ipynb  # Original Colab notebook
 ```
@@ -42,7 +46,24 @@ Trained on the [Kaggle Garbage Classification dataset](https://www.kaggle.com/da
 pip install -r requirements.txt
 ```
 
-### 2. Training via CLI
+### 2. Launch Interactive Web App (Streamlit)
+
+Launch the web demo in your browser with one command:
+
+```bash
+streamlit run app.py
+```
+
+**Web App Features:**
+- 📸 **Drag & Drop Upload**: Upload your own waste photos (JPG, PNG, WEBP).
+- 📂 **Instant Sample Testing**: Select from pre-loaded samples across all 6 categories.
+- 📊 **Confidence Distributions**: View sorted class probability bars and recycling disposal guidelines.
+- 🔍 **Real-Time Grad-CAM**: Toggle heatmaps with adjustable layer selection, colormaps (`jet`, `viridis`, `turbo`), and overlay opacity.
+- 📥 **Downloadable Diagnostic Reports**: Save the 3-panel visualization figure directly to your machine.
+
+---
+
+### 3. Training via CLI
 
 Download dataset from Kaggle and train automatically:
 
@@ -68,7 +89,7 @@ CLI options:
 
 ---
 
-### 3. Inference via CLI
+### 4. Inference via CLI
 
 Classify a single image:
 
@@ -94,7 +115,7 @@ python -m src.predict --dir ./test_images --json
 
 ---
 
-### 4. Model Explainability via Grad-CAM (CLI)
+### 5. Model Explainability via Grad-CAM (CLI)
 
 Visualize which regions of an image the CNN focused on to produce its prediction:
 
@@ -108,7 +129,7 @@ This generates a 3-panel comparison figure (`Original Image` | `Grad-CAM Activat
 
 ---
 
-### 5. Python API Usage
+### 6. Python API Usage
 
 ```python
 from src.predict import GarbagePredictor
