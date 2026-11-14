@@ -13,7 +13,9 @@ def test_parse_args_defaults():
     assert args.img_width == 150
     assert args.learning_rate == 0.001
     assert args.split_ratio == 0.8
-    assert args.model_path == "GarbageMLModel_CS549.keras"
+    assert args.model_type == "custom_cnn"
+    assert args.fine_tune_layers == 0
+    assert args.model_path is None
     assert args.classes_path == "classes.json"
     assert args.seed == 42
 

@@ -63,3 +63,11 @@ def test_get_model_fallback():
     assert isinstance(model, tf.keras.Model)
     assert model.output_shape == (None, 6)
     assert isinstance(source, str)
+
+
+def test_get_model_mobilenet_v2():
+    """Verify get_model returns a valid transfer model when mobilenet_v2 is requested."""
+    model, source = get_model("nonexistent_mb.keras", model_type="mobilenet_v2")
+    assert isinstance(model, tf.keras.Model)
+    assert model.output_shape == (None, 6)
+    assert "MobileNet" in source or "Checkpoint" in source
