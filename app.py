@@ -61,11 +61,32 @@ CATEGORY_INFO: Dict[str, Dict[str, str]] = {
 }
 
 
-@st.cache_resource(show_spinner="Loading Convolutional Neural Network...")
-def get_model(model_path: str = "GarbageMLModel_CS549.keras"):
+@st.cache_resource(show_spinner="Loading Neural Network Architecture...")
+def get_model(model_path: str = "GarbageMLModel_CS549.keras", model_type: str = "custom_cnn"):
     """Loads a saved Keras model, downloads from Hugging Face if missing, or falls back to initialized baseline."""
-    # 1. Check local model candidates
-    candidates = [model_path, "GarbageMLModel_CS549.keras", "GarbageMLModel_CS549.h5", "model.h5"]
+    # 1. If custom path exists on disk, load it
+    if model_path and os.path.isfile(model_path):
+        try:
+            model = load_model(model_path, compile_model=False)
+            return model, f"Local Checkpoint ({os.path.basename(model_path)})"
+        except Exception:
+            pass
+
+    # 2. If MobileNetV2 architecture selected
+    if model_type == "mobilenet_v2":
+        mb_candidates = ["GarbageMLModel_CS549_mobilenet_v2.keras", "mobilenet_v2.keras"]
+        for cand in mb_candidates:
+            if os.path.isfile(cand):
+                try:
+                    return load_model(cand, compile_model=False), f"Local Checkpoint ({cand})"
+                except Exception:
+                    pass
+        # Build pre-trained ImageNet MobileNetV2
+        mb_model = build_model(model_type="mobilenet_v2", compile_model=False)
+        return mb_model, "MobileNetV2 (ImageNet Pre-trained Backbone)"
+
+    # 3. Check local Custom CNN candidates
+    candidates = ["GarbageMLModel_CS549.keras", "GarbageMLModel_CS549.h5", "model.h5"]
     for cand in candidates:
         if cand and os.path.isfile(cand):
             try:
@@ -74,7 +95,7 @@ def get_model(model_path: str = "GarbageMLModel_CS549.keras"):
             except Exception:
                 continue
 
-    # 2. Automatically download trained weights from Hugging Face repository
+    # 4. Automatically download trained weights from Hugging Face repository
     try:
         from huggingface_hub import hf_hub_download
 
@@ -83,8 +104,7 @@ def get_model(model_path: str = "GarbageMLModel_CS549.keras"):
         model = load_model(downloaded_path, compile_model=False)
         return model, f"Hugging Face Hub ({hf_repo})"
     except Exception as e:
-        # 3. Fallback to fresh baseline if offline
-        fallback_model = build_model(input_shape=(150, 150, 3), num_classes=6, compile_model=False)
+        fallback_model = build_model(model_type="custom_cnn", input_shape=(150, 150, 3), num_classes=6, compile_model=False)
         return fallback_model, f"Untrained Baseline (Error: {e})"
 
 
@@ -149,11 +169,19 @@ def main():
     # Sidebar
     st.sidebar.title("⚙️ Settings & Controls")
 
-    model_path = st.sidebar.text_input("Model Checkpoint", value="GarbageMLModel_CS549.keras")
+    arch_options = ["Custom CNN (Baseline)", "MobileNetV2 (Transfer Learning)"]
+    chosen_arch = st.sidebar.selectbox("Architecture Backbone", options=arch_options, index=0)
+    selected_type = "mobilenet_v2" if "MobileNet" in chosen_arch else "custom_cnn"
+    default_path = (
+        "GarbageMLModel_CS549_mobilenet_v2.keras"
+        if selected_type == "mobilenet_v2"
+        else "GarbageMLModel_CS549.keras"
+    )
+    model_path = st.sidebar.text_input("Model Checkpoint", value=default_path)
     classes_path = st.sidebar.text_input("Classes Mapping", value="classes.json")
     classes = load_classes(classes_path) if os.path.isfile(classes_path) else list(DEFAULT_CLASSES)
 
-    model, model_source = get_model(model_path)
+    model, model_source = get_model(model_path=model_path, model_type=selected_type)
 
     if "Untrained" in model_source:
         st.sidebar.warning(f"⚠️ {model_source}")

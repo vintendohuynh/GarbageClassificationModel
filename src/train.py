@@ -97,10 +97,23 @@ def parse_args(args=None):
         help="Optional dropout rate before dense output layer (e.g. 0.2).",
     )
     parser.add_argument(
+        "--model-type",
+        type=str,
+        default="custom_cnn",
+        choices=["custom_cnn", "mobilenet_v2"],
+        help="Architecture type: 'custom_cnn' (baseline) or 'mobilenet_v2' (transfer learning).",
+    )
+    parser.add_argument(
+        "--fine-tune-layers",
+        type=int,
+        default=0,
+        help="Number of base layers to unfreeze for transfer learning fine-tuning (default: 0).",
+    )
+    parser.add_argument(
         "--model-path",
         type=str,
-        default="GarbageMLModel_CS549.keras",
-        help="Filepath where trained model is saved (default: GarbageMLModel_CS549.keras).",
+        default=None,
+        help="Filepath where trained model is saved (defaults dynamically based on model-type).",
     )
     parser.add_argument(
         "--classes-path",
@@ -201,13 +214,23 @@ def train(args):
     save_classes(train_gen.class_indices, args.classes_path)
     print(f"Class labels saved to: {args.classes_path}")
 
+    model_path = args.model_path
+    if model_path is None:
+        model_path = (
+            "GarbageMLModel_CS549_mobilenet_v2.keras"
+            if args.model_type == "mobilenet_v2"
+            else "GarbageMLModel_CS549.keras"
+        )
+
     # Build CNN model
     input_shape = (args.img_height, args.img_width, 3)
     model = build_model(
+        model_type=args.model_type,
         input_shape=input_shape,
         num_classes=num_classes,
         learning_rate=args.learning_rate,
         dropout_rate=args.dropout,
+        fine_tune_layers=args.fine_tune_layers,
         compile_model=True,
     )
     model.summary()
@@ -242,7 +265,7 @@ def train(args):
     print(f"Validation Accuracy: {val_acc * 100:.2f}% | Loss: {val_loss:.4f}")
 
     # Save trained model
-    saved_file = save_model(model, args.model_path)
+    saved_file = save_model(model, model_path)
     print(f"Model saved successfully to: {saved_file}")
 
     # Save training curves if requested
